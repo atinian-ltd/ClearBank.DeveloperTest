@@ -199,5 +199,39 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Never);
             backupAccountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Once);
         }
+
+        [TestCase(AllowedPaymentSchemes.Bacs, PaymentScheme.Bacs)]
+        [TestCase(AllowedPaymentSchemes.Chaps, PaymentScheme.Chaps)]
+        [TestCase(AllowedPaymentSchemes.FasterPayments, PaymentScheme.FasterPayments)]
+        public void MakePayment_ReturnsSuccess(AllowedPaymentSchemes allowedScheme, PaymentScheme paymentScheme)
+        {
+            // Arrange
+            var account = new Account
+            {
+                AllowedPaymentSchemes = allowedScheme,
+                Status = AccountStatus.Live,
+                Balance = 100
+            };
+
+            var configuration = new Mock<IConfigurationProvider>();
+            var accountDataStore = new Mock<IAccountDataStore>();
+            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
+
+            var backupAccountDataStore = new Mock<IAccountDataStore>();
+            var service = new PaymentService(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+
+            var request = new MakePaymentRequest
+            {
+                PaymentScheme = paymentScheme,
+                Amount = 10
+            };
+
+            // Act
+            MakePaymentResult result = service.MakePayment(request);
+
+            // Assert
+            Assert.IsTrue(result.Success);
+            accountDataStore.Verify(ds => ds.UpdateAccount(account), Times.Once);
+        }
     }
 }

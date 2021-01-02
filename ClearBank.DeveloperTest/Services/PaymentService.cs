@@ -35,7 +35,7 @@ namespace ClearBank.DeveloperTest.Services
                 account = _accountDataStore.GetAccount(request.DebtorAccountNumber);
             }
 
-            var result = new MakePaymentResult();
+            var result = new MakePaymentResult { Success = true };
 
             switch (request.PaymentScheme)
             {
