@@ -2,6 +2,7 @@
 using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Types;
+using ClearBank.DeveloperTest.Validation;
 using Moq;
 using NUnit.Framework;
 
@@ -18,8 +19,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
             var accountDataStore = new Mock<IAccountDataStore>();
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
@@ -40,8 +42,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {
@@ -80,8 +83,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {
@@ -113,8 +117,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {
@@ -148,8 +153,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {
@@ -177,8 +183,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
             var accountDataStore = new Mock<IAccountDataStore>();
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
@@ -200,8 +207,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
             var accountDataStore = new Mock<IAccountDataStore>();
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
@@ -230,8 +238,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {
@@ -266,8 +275,9 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var backupAccountDataStore = new Mock<IAccountDataStore>();
             var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+            var validatorFactory = new ValidatorFactory();
 
-            var service = new PaymentService(factory);
+            var service = new PaymentService(factory, validatorFactory);
 
             var request = new MakePaymentRequest
             {

@@ -1,26 +1,31 @@
 ﻿using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Types;
+using ClearBank.DeveloperTest.Validation;
 
 namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
         private readonly IAccountDataStoreFactory _accountDataStoreFactory;
+        private readonly IValidatorFactory _validatorFactory;
 
-        public PaymentService(IAccountDataStoreFactory accountDataStoreFactory)
+        public PaymentService(IAccountDataStoreFactory accountDataStoreFactory, IValidatorFactory validatorFactory)
         {
             _accountDataStoreFactory = accountDataStoreFactory;
+            _validatorFactory = validatorFactory;
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
             var result = new MakePaymentResult { Success = false };
 
-            var accountDataStore = _accountDataStoreFactory.BuildAccountDataStore();
+            IAccountDataStore accountDataStore = _accountDataStoreFactory.BuildAccountDataStore();
+
+            IValidator validator = _validatorFactory.BuildValidator(request.PaymentScheme);
 
             Account account = accountDataStore.GetAccount(request.DebtorAccountNumber);
 
-            if (IsValidTransaction(account, request))
+            if (validator.IsValid(account, request.Amount))
             {
                 account.Balance -= request.Amount;
 
@@ -30,55 +35,6 @@ namespace ClearBank.DeveloperTest.Services
             }
 
             return result;
-        }
-
-        private bool IsValidTransaction(Account account, MakePaymentRequest request)
-        {
-            switch (request.PaymentScheme)
-            {
-                case PaymentScheme.Bacs:
-                    if (account == null)
-                    {
-                        return false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
-                    {
-                        return false;
-                    }
-                    break;
-
-                case PaymentScheme.FasterPayments:
-                    if (account == null)
-                    {
-                        return false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
-                    {
-                        return false;
-                    }
-                    else if (account.Balance < request.Amount)
-                    {
-                        return false;
-                    }
-                    break;
-
-                case PaymentScheme.Chaps:
-                    if (account == null)
-                    {
-                        return false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
-                    {
-                        return false;
-                    }
-                    else if (account.Status != AccountStatus.Live)
-                    {
-                        return false;
-                    }
-                    break;
-            }
-
-            return true;
         }
     }
 }
