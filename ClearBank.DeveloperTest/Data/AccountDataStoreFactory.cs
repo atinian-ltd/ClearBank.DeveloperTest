@@ -5,17 +5,10 @@ namespace ClearBank.DeveloperTest.Data
     public class AccountDataStoreFactory : IAccountDataStoreFactory
     {
         private readonly IConfigurationProvider _configurationProvider;
-        private readonly IAccountDataStore _accountDataStore;
-        private readonly IAccountDataStore _backupAccountDataStore;
 
-        public AccountDataStoreFactory(
-            IConfigurationProvider configurationProvider, 
-            IAccountDataStore accountDataStore, 
-            IAccountDataStore backupAccountDataStore)
+        public AccountDataStoreFactory(IConfigurationProvider configurationProvider)
         {
             _configurationProvider = configurationProvider;
-            _accountDataStore = accountDataStore;
-            _backupAccountDataStore = backupAccountDataStore;
         }
 
         public IAccountDataStore BuildAccountDataStore()
@@ -24,11 +17,11 @@ namespace ClearBank.DeveloperTest.Data
 
             if (dataStoreType == "Backup")
             {
-                return _backupAccountDataStore;
+                return new BackupAccountDataStore();
             }
             else
             {
-                return _accountDataStore;
+                return new AccountDataStore();
             }
         }
     }

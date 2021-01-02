@@ -16,17 +16,13 @@ namespace ClearBank.DeveloperTest.Tests.Data
             // Arrange
             var configuration = new Mock<IConfigurationProvider>();
             configuration.Setup(c => c.TryGetDataStoreType(out settingValue)).Returns(true);
-
-            var liveStore = new Mock<IAccountDataStore>();
-            var backupStore = new Mock<IAccountDataStore>();
-
-            var factory = new AccountDataStoreFactory(configuration.Object, liveStore.Object, backupStore.Object);
+            var factory = new AccountDataStoreFactory(configuration.Object);
 
             // Act
             IAccountDataStore datastore = factory.BuildAccountDataStore();
 
             // Assert
-            Assert.AreEqual(liveStore.Object, datastore);
+            Assert.AreEqual(typeof(AccountDataStore), datastore.GetType());
         }
 
         [Test]
@@ -34,20 +30,15 @@ namespace ClearBank.DeveloperTest.Tests.Data
         {
             // Arrange
             string settingValue;
-
             var configuration = new Mock<IConfigurationProvider>();
             configuration.Setup(c => c.TryGetDataStoreType(out settingValue)).Returns(false);
-
-            var liveStore = new Mock<IAccountDataStore>();
-            var backupStore = new Mock<IAccountDataStore>();
-
-            var factory = new AccountDataStoreFactory(configuration.Object, liveStore.Object, backupStore.Object);
+            var factory = new AccountDataStoreFactory(configuration.Object);
 
             // Act
             IAccountDataStore datastore = factory.BuildAccountDataStore();
 
             // Assert
-            Assert.AreEqual(liveStore.Object, datastore);
+            Assert.AreEqual(typeof(AccountDataStore), datastore.GetType());
         }
 
         [Test]
@@ -55,19 +46,15 @@ namespace ClearBank.DeveloperTest.Tests.Data
         {
             // Arrange
             string settingValue = "Backup";
-
             var configuration = new Mock<IConfigurationProvider>();
             configuration.Setup(c => c.TryGetDataStoreType(out settingValue)).Returns(true);
-            var liveStore = new Mock<IAccountDataStore>();
-            var backupStore = new Mock<IAccountDataStore>();
-
-            var factory = new AccountDataStoreFactory(configuration.Object, liveStore.Object, backupStore.Object);
+            var factory = new AccountDataStoreFactory(configuration.Object);
 
             // Act
             IAccountDataStore datastore = factory.BuildAccountDataStore();
 
             // Assert
-            Assert.AreEqual(backupStore.Object, datastore);
+            Assert.AreEqual(typeof(BackupAccountDataStore), datastore.GetType());
         }
     }
 }
