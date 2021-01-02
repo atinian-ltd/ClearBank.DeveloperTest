@@ -1,6 +1,7 @@
 ﻿using ClearBank.DeveloperTest.Configuration;
 using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Types;
+using System;
 
 namespace ClearBank.DeveloperTest.Services
 {
@@ -22,80 +23,97 @@ namespace ClearBank.DeveloperTest.Services
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
-            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
+            var result = new MakePaymentResult { Success = false };
 
-            Account account = null;
+            Account account = GetAccount(request.DebtorAccountNumber);
 
-            if (dataStoreType == "Backup")
+            if (IsValidTransaction(account, request))
             {
-                account = _backupAccountDataStore.GetAccount(request.DebtorAccountNumber);
-            }
-            else
-            {
-                account = _accountDataStore.GetAccount(request.DebtorAccountNumber);
+                account.Balance -= request.Amount;
+
+                UpdateAccount(account);
+
+                result.Success = true;
             }
 
-            var result = new MakePaymentResult { Success = true };
+            return result;
+        }
 
+        private bool IsValidTransaction(Account account, MakePaymentRequest request)
+        {
             switch (request.PaymentScheme)
             {
                 case PaymentScheme.Bacs:
                     if (account == null)
                     {
-                        result.Success = false;
+                        return false;
                     }
                     else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
                     {
-                        result.Success = false;
+                        return false;
                     }
                     break;
 
                 case PaymentScheme.FasterPayments:
                     if (account == null)
                     {
-                        result.Success = false;
+                        return false;
                     }
                     else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
                     {
-                        result.Success = false;
+                        return false;
                     }
                     else if (account.Balance < request.Amount)
                     {
-                        result.Success = false;
+                        return false;
                     }
                     break;
 
                 case PaymentScheme.Chaps:
                     if (account == null)
                     {
-                        result.Success = false;
+                        return false;
                     }
                     else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
                     {
-                        result.Success = false;
+                        return false;
                     }
                     else if (account.Status != AccountStatus.Live)
                     {
-                        result.Success = false;
+                        return false;
                     }
                     break;
             }
 
-            if (result.Success)
+            return true;
+        }
+
+        private void UpdateAccount(Account account)
+        {
+            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
+
+            if (dataStoreType == "Backup")
             {
-                account.Balance -= request.Amount;
-
-                if (dataStoreType == "Backup")
-                {
-                    _backupAccountDataStore.UpdateAccount(account);
-                }
-                else
-                {
-                    _accountDataStore.UpdateAccount(account);
-                }
+                _backupAccountDataStore.UpdateAccount(account);
             }
+            else
+            {
+                _accountDataStore.UpdateAccount(account);
+            }
+        }
 
-            return result;
+        private Account GetAccount(string accountNumber)
+        {
+            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
+
+            if (dataStoreType == "Backup")
+            {
+                return _backupAccountDataStore.GetAccount(accountNumber);
+            }
+            else
+            {
+                return _accountDataStore.GetAccount(accountNumber);
+            }
         }
     }
 }
