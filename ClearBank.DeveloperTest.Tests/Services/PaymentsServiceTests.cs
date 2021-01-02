@@ -37,6 +37,32 @@ namespace ClearBank.DeveloperTest.Tests.Services
         }
 
         [Test]
+        public void MakePayment_ReturnsFailureIfNullRequest()
+        {
+            // Arrange
+            var dataStore = new Mock<IAccountDataStore>();
+            dataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns((Account)null);
+
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
+
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
+
+            // Act
+            MakePaymentResult result = service.MakePayment(null);
+
+            // Assert
+            Assert.IsFalse(result.Success);
+            dataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
+        }
+
+        [Test]
         public void MakePayment_ReturnsFailureIfAccountNotFound()
         {
             // Arrange

@@ -19,20 +19,27 @@ namespace ClearBank.DeveloperTest.Services
         {
             var result = new MakePaymentResult { Success = false };
 
+            if (request == null)
+            {
+                return result;
+            }
+
             IAccountDataStore accountDataStore = _accountDataStoreFactory.BuildAccountDataStore();
 
             IValidator validator = _validatorFactory.BuildValidator(request.PaymentScheme);
 
             Account account = accountDataStore.GetAccount(request.DebtorAccountNumber);
 
-            if (account != null && validator.IsValid(account, request.Amount))
+            if (account == null || !validator.IsValid(account, request.Amount))
             {
-                account.Balance -= request.Amount;
-
-                accountDataStore.UpdateAccount(account);
-
-                result.Success = true;
+                return result;
             }
+
+            account.Balance -= request.Amount;
+
+            accountDataStore.UpdateAccount(account);
+
+            result.Success = true;
 
             return result;
         }
