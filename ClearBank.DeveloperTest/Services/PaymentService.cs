@@ -1,37 +1,30 @@
-﻿using ClearBank.DeveloperTest.Configuration;
-using ClearBank.DeveloperTest.Data;
+﻿using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Types;
-using System;
 
 namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
-        private readonly IConfigurationProvider _configurationProvider;
-        private readonly IAccountDataStore _accountDataStore;
-        private readonly IAccountDataStore _backupAccountDataStore;
+        private readonly IAccountDataStoreFactory _accountDataStoreFactory;
 
-        public PaymentService(
-            IConfigurationProvider configurationProvider,
-            IAccountDataStore accountDataStore,
-            IAccountDataStore backupAccountDataStore)
+        public PaymentService(IAccountDataStoreFactory accountDataStoreFactory)
         {
-            _configurationProvider = configurationProvider;
-            _accountDataStore = accountDataStore;
-            _backupAccountDataStore = backupAccountDataStore;
+            _accountDataStoreFactory = accountDataStoreFactory;
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
             var result = new MakePaymentResult { Success = false };
 
-            Account account = GetAccount(request.DebtorAccountNumber);
+            var accountDataStore = _accountDataStoreFactory.BuildAccountDataStore();
+
+            Account account = accountDataStore.GetAccount(request.DebtorAccountNumber);
 
             if (IsValidTransaction(account, request))
             {
                 account.Balance -= request.Amount;
 
-                UpdateAccount(account);
+                accountDataStore.UpdateAccount(account);
 
                 result.Success = true;
             }
@@ -86,34 +79,6 @@ namespace ClearBank.DeveloperTest.Services
             }
 
             return true;
-        }
-
-        private void UpdateAccount(Account account)
-        {
-            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
-
-            if (dataStoreType == "Backup")
-            {
-                _backupAccountDataStore.UpdateAccount(account);
-            }
-            else
-            {
-                _accountDataStore.UpdateAccount(account);
-            }
-        }
-
-        private Account GetAccount(string accountNumber)
-        {
-            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
-
-            if (dataStoreType == "Backup")
-            {
-                return _backupAccountDataStore.GetAccount(accountNumber);
-            }
-            else
-            {
-                return _accountDataStore.GetAccount(accountNumber);
-            }
         }
     }
 }
