@@ -233,5 +233,38 @@ namespace ClearBank.DeveloperTest.Tests.Services
             Assert.IsTrue(result.Success);
             accountDataStore.Verify(ds => ds.UpdateAccount(account), Times.Once);
         }
+
+        [TestCase(100, 10, 90)]
+        [TestCase(1000.01, 10.50, 989.51)]
+        [TestCase(999_999_999, 999_000_999, 999_000)]
+        public void MakePayment_DecrementsBalance(decimal startAmount, decimal paymentAmount, decimal endAmount)
+        {
+            // Arrange
+            var account = new Account
+            {
+                AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
+                Status = AccountStatus.Live,
+                Balance = startAmount
+            };
+
+            var configuration = new Mock<IConfigurationProvider>();
+            var accountDataStore = new Mock<IAccountDataStore>();
+            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
+
+            var backupAccountDataStore = new Mock<IAccountDataStore>();
+            var service = new PaymentService(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
+
+            var request = new MakePaymentRequest
+            {
+                PaymentScheme = PaymentScheme.Chaps,
+                Amount = paymentAmount
+            };
+
+            // Act
+            MakePaymentResult result = service.MakePayment(request);
+
+            // Assert
+            accountDataStore.Verify(ds => ds.UpdateAccount(It.Is<Account>(a => a.Balance == endAmount)), Times.Once);
+        }
     }
 }
