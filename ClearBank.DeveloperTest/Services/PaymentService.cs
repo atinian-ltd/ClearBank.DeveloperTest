@@ -25,7 +25,7 @@ namespace ClearBank.DeveloperTest.Services
 
             Account account = accountDataStore.GetAccount(request.DebtorAccountNumber);
 
-            if (validator.IsValid(account, request.Amount))
+            if (account != null && validator.IsValid(account, request.Amount))
             {
                 account.Balance -= request.Amount;
 

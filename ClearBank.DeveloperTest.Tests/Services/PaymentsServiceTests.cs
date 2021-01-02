@@ -15,13 +15,19 @@ namespace ClearBank.DeveloperTest.Tests.Services
         public void MakePayment_ReturnsNotNull()
         {
             // Arrange
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var dataStore = new Mock<IAccountDataStore>();
+            dataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(new Account());
 
-            var service = new PaymentService(factory, validatorFactory);
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
+
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
@@ -30,230 +36,103 @@ namespace ClearBank.DeveloperTest.Tests.Services
             Assert.IsNotNull(result);
         }
 
-        [TestCase(PaymentScheme.Bacs)]
-        [TestCase(PaymentScheme.Chaps)]
-        [TestCase(PaymentScheme.FasterPayments)]
-        public void MakePayment_ReturnsFailureIfAccountNotFound(PaymentScheme paymentScheme)
+        [Test]
+        public void MakePayment_ReturnsFailureIfAccountNotFound()
         {
             // Arrange
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns((Account) null);
+            var dataStore = new Mock<IAccountDataStore>();
+            dataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns((Account)null);
 
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
-            var service = new PaymentService(factory, validatorFactory);
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
 
-            var request = new MakePaymentRequest
-            {
-                PaymentScheme = paymentScheme
-            };
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
 
             // Assert
             Assert.IsFalse(result.Success);
-            accountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-            backupAccountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-        }
-
-        [TestCase(AllowedPaymentSchemes.Bacs, PaymentScheme.Chaps)]
-        [TestCase(AllowedPaymentSchemes.FasterPayments, PaymentScheme.Chaps)]
-        [TestCase(AllowedPaymentSchemes.FasterPayments | AllowedPaymentSchemes.Bacs, PaymentScheme.Chaps)]
-        [TestCase(AllowedPaymentSchemes.Bacs, PaymentScheme.FasterPayments)]
-        [TestCase(AllowedPaymentSchemes.Chaps, PaymentScheme.FasterPayments)]
-        [TestCase(AllowedPaymentSchemes.Bacs | AllowedPaymentSchemes.Chaps, PaymentScheme.FasterPayments)]
-        [TestCase(AllowedPaymentSchemes.Chaps, PaymentScheme.Bacs)]
-        [TestCase(AllowedPaymentSchemes.FasterPayments, PaymentScheme.Bacs)]
-        [TestCase(AllowedPaymentSchemes.FasterPayments | AllowedPaymentSchemes.Chaps, PaymentScheme.Bacs)]
-        public void MakePayment_ReturnsFailureIfSchemeNotAllowed(AllowedPaymentSchemes allowedSchemes, PaymentScheme requestScheme)
-        {
-            // Arrange
-            var account = new Account
-            {
-                AllowedPaymentSchemes = allowedSchemes
-            };
-
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
-
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
-
-            var service = new PaymentService(factory, validatorFactory);
-
-            var request = new MakePaymentRequest
-            {
-                PaymentScheme = requestScheme
-            };
-
-            // Act
-            MakePaymentResult result = service.MakePayment(request);
-
-            // Assert
-            Assert.IsFalse(result.Success);
-            accountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-            backupAccountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
+            dataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
         }
 
         [Test]
-        public void MakePayment_FasterPayment_ReturnsFailureIfInsufficientFunds()
+        public void MakePayment_ReturnsFailureIfValidationFails()
         {
             // Arrange
-            var account = new Account
-            {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
-                Balance = 1
-            };
+            var dataStore = new Mock<IAccountDataStore>();
 
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(false);
 
-            var service = new PaymentService(factory, validatorFactory);
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
 
-            var request = new MakePaymentRequest
-            {
-                PaymentScheme = PaymentScheme.FasterPayments,
-                Amount = 2
-            };
-
-            // Act
-            MakePaymentResult result = service.MakePayment(request);
-
-            // Assert
-            Assert.IsFalse(result.Success);
-            accountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-            backupAccountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-        }
-
-        [TestCase(AccountStatus.Disabled)]
-        [TestCase(AccountStatus.InboundPaymentsOnly)]
-        public void MakePayment_Chaps_ReturnsFailureIfInactive(AccountStatus status)
-        {
-            // Arrange
-            var account = new Account
-            {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
-                Status = status
-            };
-
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
-
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
-
-            var service = new PaymentService(factory, validatorFactory);
-
-            var request = new MakePaymentRequest
-            {
-                PaymentScheme = PaymentScheme.Chaps
-            };
-
-            // Act
-            MakePaymentResult result = service.MakePayment(request);
-
-            // Assert
-            Assert.IsFalse(result.Success);
-            accountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-            backupAccountDataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
-        }
-
-        [TestCase("Live")]
-        [TestCase("")]
-        [TestCase(null)]
-        public void MakePayment_DefaultsToLiveDataStore(string settingValue)
-        {
-            // Arrange
-            var configuration = new Mock<IConfigurationProvider>();
-            configuration.Setup(c => c.TryGetDataStoreType(out settingValue)).Returns(true);
-
-            var accountDataStore = new Mock<IAccountDataStore>();
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
-
-            var service = new PaymentService(factory, validatorFactory);
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
 
             // Assert
-            accountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Once);
-            backupAccountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Never);
+            Assert.IsFalse(result.Success);
+            dataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Never);
         }
 
         [Test]
-        public void MakePayment_UsesBackupDataStoreWhenConfigured()
+        public void MakePayment_CallsFactoryForDataStore()
         {
             // Arrange
-            string settingValue = "Backup";
+            var dataStore = new Mock<IAccountDataStore>();
 
-            var configuration = new Mock<IConfigurationProvider>();
-            configuration.Setup(c => c.TryGetDataStoreType(out settingValue)).Returns(true);
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
-            var accountDataStore = new Mock<IAccountDataStore>();
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var validator = new Mock<IValidator>();
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
 
-            var service = new PaymentService(factory, validatorFactory);
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             // Act
             MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
 
             // Assert
-            accountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Never);
-            backupAccountDataStore.Verify(ds => ds.GetAccount(It.IsAny<string>()), Times.Once);
+            accountDataStoreFactory.Verify(f => f.BuildAccountDataStore(), Times.Once);
         }
 
-        [TestCase(AllowedPaymentSchemes.Bacs, PaymentScheme.Bacs)]
-        [TestCase(AllowedPaymentSchemes.Chaps, PaymentScheme.Chaps)]
-        [TestCase(AllowedPaymentSchemes.FasterPayments, PaymentScheme.FasterPayments)]
-        public void MakePayment_ReturnsSuccess(AllowedPaymentSchemes allowedScheme, PaymentScheme paymentScheme)
+        [Test]
+        public void MakePayment_ReturnsSuccess()
         {
             // Arrange
-            var account = new Account
-            {
-                AllowedPaymentSchemes = allowedScheme,
-                Status = AccountStatus.Live,
-                Balance = 100
-            };
+            var dataStore = new Mock<IAccountDataStore>();
+            dataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(new Account());
 
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
 
-            var service = new PaymentService(factory, validatorFactory);
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
 
-            var request = new MakePaymentRequest
-            {
-                PaymentScheme = paymentScheme,
-                Amount = 10
-            };
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             // Act
-            MakePaymentResult result = service.MakePayment(request);
+            MakePaymentResult result = service.MakePayment(new MakePaymentRequest());
 
             // Assert
             Assert.IsTrue(result.Success);
-            accountDataStore.Verify(ds => ds.UpdateAccount(account), Times.Once);
+            dataStore.Verify(ds => ds.UpdateAccount(It.IsAny<Account>()), Times.Once);
         }
 
         [TestCase(100, 10, 90)]
@@ -269,15 +148,19 @@ namespace ClearBank.DeveloperTest.Tests.Services
                 Balance = startAmount
             };
 
-            var configuration = new Mock<IConfigurationProvider>();
-            var accountDataStore = new Mock<IAccountDataStore>();
-            accountDataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
+            var dataStore = new Mock<IAccountDataStore>();
+            dataStore.Setup(ds => ds.GetAccount(It.IsAny<string>())).Returns(account);
 
-            var backupAccountDataStore = new Mock<IAccountDataStore>();
-            var factory = new AccountDataStoreFactory(configuration.Object, accountDataStore.Object, backupAccountDataStore.Object);
-            var validatorFactory = new ValidatorFactory();
+            var accountDataStoreFactory = new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
-            var service = new PaymentService(factory, validatorFactory);
+            var validator = new Mock<IValidator>();
+            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+
+            var validatorFactory = new Mock<IValidatorFactory>();
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+
+            var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
             var request = new MakePaymentRequest
             {
@@ -289,7 +172,7 @@ namespace ClearBank.DeveloperTest.Tests.Services
             MakePaymentResult result = service.MakePayment(request);
 
             // Assert
-            accountDataStore.Verify(ds => ds.UpdateAccount(It.Is<Account>(a => a.Balance == endAmount)), Times.Once);
+            dataStore.Verify(ds => ds.UpdateAccount(It.Is<Account>(a => a.Balance == endAmount)), Times.Once);
         }
     }
 }
