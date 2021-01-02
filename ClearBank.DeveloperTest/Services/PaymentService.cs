@@ -1,26 +1,38 @@
-﻿using ClearBank.DeveloperTest.Data;
+﻿using ClearBank.DeveloperTest.Configuration;
+using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Types;
-using System.Configuration;
 
 namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
+        private readonly IConfigurationProvider _configurationProvider;
+        private readonly IAccountDataStore _accountDataStore;
+        private readonly IAccountDataStore _backupAccountDataStore;
+
+        public PaymentService(
+            IConfigurationProvider configurationProvider,
+            IAccountDataStore accountDataStore,
+            IAccountDataStore backupAccountDataStore)
+        {
+            _configurationProvider = configurationProvider;
+            _accountDataStore = accountDataStore;
+            _backupAccountDataStore = backupAccountDataStore;
+        }
+
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
-            var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
+            _configurationProvider.TryGetDataStoreType(out string dataStoreType);
 
             Account account = null;
 
             if (dataStoreType == "Backup")
             {
-                var accountDataStore = new BackupAccountDataStore();
-                account = accountDataStore.GetAccount(request.DebtorAccountNumber);
+                account = _backupAccountDataStore.GetAccount(request.DebtorAccountNumber);
             }
             else
             {
-                var accountDataStore = new AccountDataStore();
-                account = accountDataStore.GetAccount(request.DebtorAccountNumber);
+                account = _accountDataStore.GetAccount(request.DebtorAccountNumber);
             }
 
             var result = new MakePaymentResult();
@@ -75,13 +87,11 @@ namespace ClearBank.DeveloperTest.Services
 
                 if (dataStoreType == "Backup")
                 {
-                    var accountDataStore = new BackupAccountDataStore();
-                    accountDataStore.UpdateAccount(account);
+                    _backupAccountDataStore.UpdateAccount(account);
                 }
                 else
                 {
-                    var accountDataStore = new AccountDataStore();
-                    accountDataStore.UpdateAccount(account);
+                    _accountDataStore.UpdateAccount(account);
                 }
             }
 
