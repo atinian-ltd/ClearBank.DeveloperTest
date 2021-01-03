@@ -20,10 +20,10 @@ namespace ClearBank.DeveloperTest.Tests.Validation
                 Balance = balance
             };
 
-            var validator = new FasterPaymentsValidator();
+            var validator = new FasterPaymentsValidator(amount);
 
             // Act
-            bool isValid = validator.IsValid(account, amount);
+            bool isValid = validator.AccountCanMakePayment(account);
 
             // Assert
             Assert.AreEqual(expectedValidity, isValid);

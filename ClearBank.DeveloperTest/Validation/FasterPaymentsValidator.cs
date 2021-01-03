@@ -2,21 +2,23 @@
 
 namespace ClearBank.DeveloperTest.Validation
 {
-    public class FasterPaymentsValidator : IValidator
+    public class FasterPaymentsValidator : SafeValidator, IValidator
     {
-        public bool IsValid(Account account, decimal amount)
+        private readonly decimal _amount;
+
+        public FasterPaymentsValidator(decimal amount)
         {
-            if (account == null)
-            {
-                return false;
-            }
-            
+            _amount = amount;
+        }
+
+        protected override bool IsValid(Account account)
+        {
             if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
             {
                 return false;
             }
             
-            if (account.Balance < amount)
+            if (account.Balance < _amount)
             {
                 return false;
             }

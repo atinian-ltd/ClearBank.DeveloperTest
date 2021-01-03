@@ -5,21 +5,21 @@ namespace ClearBank.DeveloperTest.Validation
 {
     public class ValidatorFactory : IValidatorFactory
     {
-        public IValidator BuildValidator(PaymentScheme scheme)
+        public IValidator BuildValidator(MakePaymentRequest request)
         {
-            switch (scheme)
+            switch (request.PaymentScheme)
             {
                 case PaymentScheme.Bacs:
                     return new BacsValidator();
 
                 case PaymentScheme.FasterPayments:
-                    return new FasterPaymentsValidator();
+                    return new FasterPaymentsValidator(request.Amount);
 
                 case PaymentScheme.Chaps:
                     return new ChapsValidator();
             }
 
-            throw new UnknownPaymentSchemeException($"Scheme '{scheme}' has not been set up");
+            throw new UnknownPaymentSchemeException($"Scheme '{request.PaymentScheme}' has not been set up");
         }
     }
 }

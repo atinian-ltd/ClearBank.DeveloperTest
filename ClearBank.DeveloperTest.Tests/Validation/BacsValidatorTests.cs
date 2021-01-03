@@ -21,7 +21,7 @@ namespace ClearBank.DeveloperTest.Tests.Validation
             var validator = new BacsValidator();
 
             // Act
-            bool isValid = validator.IsValid(account, 10);
+            bool isValid = validator.AccountCanMakePayment(account);
 
             // Assert
             Assert.AreEqual(expectedValidity, isValid);

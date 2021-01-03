@@ -22,10 +22,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(true);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -47,10 +47,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(true);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -73,10 +73,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(true);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -98,10 +98,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(false);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(false);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -124,7 +124,7 @@ namespace ClearBank.DeveloperTest.Tests.Services
 
             var validator = new Mock<IValidator>();
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -146,10 +146,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(true);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 
@@ -181,10 +181,10 @@ namespace ClearBank.DeveloperTest.Tests.Services
             accountDataStoreFactory.Setup(f => f.BuildAccountDataStore()).Returns(dataStore.Object);
 
             var validator = new Mock<IValidator>();
-            validator.Setup(v => v.IsValid(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
+            validator.Setup(v => v.AccountCanMakePayment(It.IsAny<Account>())).Returns(true);
 
             var validatorFactory = new Mock<IValidatorFactory>();
-            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<PaymentScheme>())).Returns(validator.Object);
+            validatorFactory.Setup(vf => vf.BuildValidator(It.IsAny<MakePaymentRequest>())).Returns(validator.Object);
 
             var service = new PaymentService(accountDataStoreFactory.Object, validatorFactory.Object);
 

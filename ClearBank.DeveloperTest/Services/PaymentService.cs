@@ -26,11 +26,11 @@ namespace ClearBank.DeveloperTest.Services
 
             IAccountDataStore accountDataStore = _accountDataStoreFactory.BuildAccountDataStore();
 
-            IValidator validator = _validatorFactory.BuildValidator(request.PaymentScheme);
+            IValidator validator = _validatorFactory.BuildValidator(request);
 
             Account account = accountDataStore.GetAccount(request.DebtorAccountNumber);
 
-            if (account == null || !validator.IsValid(account, request.Amount))
+            if (account == null || !validator.AccountCanMakePayment(account))
             {
                 return result;
             }

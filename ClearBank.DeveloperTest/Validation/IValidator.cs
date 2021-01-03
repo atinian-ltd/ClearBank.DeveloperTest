@@ -4,6 +4,6 @@ namespace ClearBank.DeveloperTest.Validation
 {
     public interface IValidator
     {
-        bool IsValid(Account account, decimal amount);
+        bool AccountCanMakePayment(Account account);
     }
 }

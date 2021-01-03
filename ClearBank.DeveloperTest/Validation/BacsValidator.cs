@@ -2,15 +2,10 @@
 
 namespace ClearBank.DeveloperTest.Validation
 {
-    public class BacsValidator : IValidator
+    public class BacsValidator : SafeValidator, IValidator
     {
-        public bool IsValid(Account account, decimal amount)
+        protected override bool IsValid(Account account)
         {
-            if (account == null)
-            {
-                return false;
-            }
-
             return account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs);
         }
     }

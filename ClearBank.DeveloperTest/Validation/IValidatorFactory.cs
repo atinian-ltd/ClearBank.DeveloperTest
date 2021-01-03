@@ -4,6 +4,6 @@ namespace ClearBank.DeveloperTest.Validation
 {
     public interface IValidatorFactory
     {
-        IValidator BuildValidator(PaymentScheme scheme);
+        IValidator BuildValidator(MakePaymentRequest request);
     }
 }

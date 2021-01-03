@@ -15,9 +15,10 @@ namespace ClearBank.DeveloperTest.Tests.Validation
         {
             // Arrange
             var factory = new ValidatorFactory();
+            var request = new MakePaymentRequest { PaymentScheme = scheme };
 
             // Act
-            var validator = factory.BuildValidator(scheme);
+            var validator = factory.BuildValidator(request);
 
             // Assert
             Assert.AreEqual(expectedType, validator.GetType());
